@@ -2,3 +2,6 @@
 SDL2.dll
 include/
 lib/
+*.pdb
+*.ilk
+*.obj

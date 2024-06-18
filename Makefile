@@ -1,6 +1,3 @@
-COMPILER = g++
-
-WINDOWS_FLAGS = -lmingw32
-
-win_main: src/main.cpp
-	$(COMPILER) src/main.cpp -o build/five-one.exe $(WINDOWS_FLAGS)
+main: src/main.cpp
+	cl /Zi src/main.cpp /I"src\\include" /Fe"build\\five-one.exe" /Fo"build\\" /link /LIBPATH:"src\\lib"
+	
