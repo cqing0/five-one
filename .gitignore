@@ -1,5 +1,6 @@
 *.swp
 SDL2.dll
+glew32.dll
 include/
 lib/
 *.pdb
