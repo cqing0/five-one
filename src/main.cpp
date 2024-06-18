@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 #include "SDL.h"
 #include <stdio.h>
+#include "file_loading.h"
 
 #define SDL_main main
 
@@ -12,6 +13,16 @@ SDL_GLContext context = NULL;
 
 // OpenGL vert data
 GLuint vertex_array_id;
+GLuint vertex_buffer;
+static GLfloat vertex_buffer_data[] = {
+	-1.0f, -1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	0.0f, 1.0f, 0.0f
+};
+
+// Shaders
+char *vertex_shader;
+char *fragment_shader;
 
 void Init_SDL_GL()
 {
@@ -35,6 +46,10 @@ void Init_GL_Objects()
 {
 	glGenVertexArrays(1, &vertex_array_id);
 	glBindVertexArray(vertex_array_id);
+
+	glGenBuffers(1, &vertex_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 int main(int argc, char** argv)
@@ -45,7 +60,6 @@ int main(int argc, char** argv)
 	}
 
 	Init_SDL_GL();
-	/* Init_GL_Objects(); */
 
 	window = SDL_CreateWindow("Game", 50, 50, 600, 600, SDL_WINDOW_OPENGL);
 
@@ -60,6 +74,8 @@ int main(int argc, char** argv)
         printf("error: %d\n", glGetError());
     }
 
+	Init_GL_Objects();
+
 	bool quit = false;
 	SDL_Event event;
 
@@ -71,6 +87,14 @@ int main(int argc, char** argv)
 		// Generate output
 		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT );
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDisableVertexAttribArray(0);
+
 		SDL_GL_SwapWindow(window);
 	}
 
