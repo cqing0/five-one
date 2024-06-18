@@ -1,0 +1,4 @@
+*.swp
+SDL2.dll
+include/
+lib/
