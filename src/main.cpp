@@ -21,11 +21,6 @@ static GLfloat vertex_buffer_data[] = {
 	0.0f, 1.0f, 0.0f
 };
 
-// Shaders
-GLuint vertex_shader;
-GLuint fragment_shader;
-GLuint shader_program;
-
 void Init_SDL_GL()
 {
     // Set OpenGL profiles
@@ -56,6 +51,12 @@ int main(int argc, char** argv)
 	window = SDL_CreateWindow("Game", 50, 50, 600, 600, SDL_WINDOW_OPENGL);
 
     context = SDL_GL_CreateContext(window);
+
+	// Shaders
+	GLuint vertex_shader;
+	GLuint fragment_shader;
+	GLuint shader_program;
+
 	if (context == NULL) {
         printf("error creating context: %s\n", SDL_GetError());
 	}
@@ -67,30 +68,33 @@ int main(int argc, char** argv)
     }
 
 	int success;
-	char info[512];
 
 	// Load the shaders into an OpenGL program
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	const char *file_vertex_shader_source = LoadShaderData("assets/vertShader.vs");
+	printf("%s\n", file_vertex_shader_source);
 	glShaderSource(vertex_shader, 1, &file_vertex_shader_source, NULL);
 	glCompileShader(vertex_shader);
 
+	char info[4096];
+
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-		glGetProgramInfoLog(vertex_shader, 512, NULL, info);
-		printf("Error loading vertex shader %s\n", info);
+		glGetShaderInfoLog(vertex_shader, 4096, NULL, info);
+		printf("Error compiling vertex shader %s 0x%x\n", info, glGetError());
     }
 	else {
 		printf("Success loading vertex shader\n");
 	}
 
 	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+	const char *file_fragment_shader_source = LoadShaderData("assets/fragShader.fs");
+	glShaderSource(fragment_shader, 1, &file_fragment_shader_source, NULL);
 	glCompileShader(fragment_shader);
 
 	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
-		glGetProgramInfoLog(fragment_shader, 512, NULL, info);
+		glGetShaderInfoLog(fragment_shader, 512, NULL, info);
 		printf("Error loading fragment shader %s\n", info);
     }
 	else {

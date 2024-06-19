@@ -4,7 +4,7 @@
 
 char *LoadShaderData(const char *filename)
 {
-	FILE *file = fopen(filename, "r");
+	FILE *file = fopen(filename, "rb");
 	if (!file) {
 		printf("Cannot open file, %s\n", filename);
 		return NULL;
@@ -16,7 +16,8 @@ char *LoadShaderData(const char *filename)
 	long length = ftell(file);
 	rewind(file);
 
-	char *content = (char*)malloc(length + 1);
+	char *content ;
+	content = (char*)malloc(length + 1);
 	if (!content) {
 		printf("Cannot alloc content, %s\n", content);
 		fclose(file);
