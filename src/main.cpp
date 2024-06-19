@@ -4,6 +4,7 @@
 #include "SDL.h"
 #include <stdio.h>
 #include "file_loading.h"
+#include "shaders.h"
 
 #define SDL_main main
 
@@ -21,8 +22,9 @@ static GLfloat vertex_buffer_data[] = {
 };
 
 // Shaders
-char *vertex_shader;
-char *fragment_shader;
+GLuint vertex_shader;
+GLuint fragment_shader;
+GLuint shader_program;
 
 void Init_SDL_GL()
 {
@@ -40,16 +42,6 @@ void Init_SDL_GL()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     // Hardware acceleration
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-}
-
-void Init_GL_Objects()
-{
-	glGenVertexArrays(1, &vertex_array_id);
-	glBindVertexArray(vertex_array_id);
-
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 int main(int argc, char** argv)
@@ -74,7 +66,66 @@ int main(int argc, char** argv)
         printf("error: %d\n", glGetError());
     }
 
-	Init_GL_Objects();
+	int success;
+	char info[512];
+
+	// Load the shaders into an OpenGL program
+	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	const char *file_vertex_shader_source = LoadShaderData("assets/vertShader.vs");
+	glShaderSource(vertex_shader, 1, &file_vertex_shader_source, NULL);
+	glCompileShader(vertex_shader);
+
+	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+		glGetProgramInfoLog(vertex_shader, 512, NULL, info);
+		printf("Error loading vertex shader %s\n", info);
+    }
+	else {
+		printf("Success loading vertex shader\n");
+	}
+
+	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
+	glCompileShader(fragment_shader);
+
+	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+		glGetProgramInfoLog(fragment_shader, 512, NULL, info);
+		printf("Error loading fragment shader %s\n", info);
+    }
+	else {
+		printf("Success loading fragment shader\n");
+	}
+
+	// Create a shader program
+	shader_program = glCreateProgram();
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+	glLinkProgram(shader_program);
+
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shader_program, 512, NULL, info);
+		printf("Error compiling shader program %s\n", info);
+	}
+	else {
+		printf("Success compiling shader program\n");
+	}
+
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	// Bind data
+	// Array data
+	glGenVertexArrays(1, &vertex_array_id);
+	glGenBuffers(1, &vertex_buffer);
+	glBindVertexArray(vertex_array_id);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffer_data), vertex_buffer_data, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	bool quit = false;
 	SDL_Event event;
@@ -85,16 +136,11 @@ int main(int argc, char** argv)
 			if (event.type == SDL_QUIT) quit = true;
 		}
 		// Generate output
-		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT );
-
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
+		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+		glUseProgram(shader_program);
+		glBindVertexArray(vertex_array_id);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDisableVertexAttribArray(0);
-
 		SDL_GL_SwapWindow(window);
 	}
 
