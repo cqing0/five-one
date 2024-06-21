@@ -150,10 +150,12 @@ int main(int argc, char** argv)
 	// Array data
 	glGenVertexArrays(1, &vertex_array_id);
 	glGenBuffers(1, &vertex_buffer);
+
 	glBindVertexArray(vertex_array_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(right_angle_tri), right_angle_tri, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -161,8 +163,22 @@ int main(int argc, char** argv)
 	bool quit = false;
 	SDL_Event event;
 
-	// A temporary transform matrix
-	mat4f transform[16] = {
+	// Temporary matrices
+	mat4f model[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+
+	mat4f view[16] = {
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+
+	mat4f projection[16] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
@@ -188,13 +204,16 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT);
 
 		// Temporary transforms for testing inputs and transforms
-		GLuint transform_loc = glGetUniformLocation(shader_program, "transform");
-		glUniformMatrix4fv(transform_loc, 1, GL_FALSE, transform);
-		scale(transform, &scalar, player_dir * delta_time);
+		GLuint model_loc = glGetUniformLocation(shader_program, "model");
+		glUniformMatrix4fv(model_loc, 1, GL_FALSE, model);
+		GLuint view_loc = glGetUniformLocation(shader_program, "view");
+		glUniformMatrix4fv(view_loc, 1, GL_FALSE, view);
+		GLuint projection_loc = glGetUniformLocation(shader_program, "projection");
+		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection);
 
 		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array_id);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 		SDL_GL_SwapWindow(window);
 	}
 
