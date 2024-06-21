@@ -82,6 +82,7 @@ int main(int argc, char** argv)
 	// Shaders
 	GLuint vertex_shader;
 	GLuint fragment_shader;
+	GLuint main_texture_id;
 	GLuint shader_program;
 
 	if (context == NULL) {
@@ -114,15 +115,22 @@ int main(int argc, char** argv)
 		printf("Success loading vertex shader\n");
 	}
 
+	glGenTextures(1, &main_texture_id);
+	glBindTexture(GL_TEXTURE_2D, main_texture_id);
+	const char *texture_data = LoadBitmap_GL("assets/tex.bmp");
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 128, 128, 0, GL_BGR, GL_UNSIGNED_BYTE, texture_data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	const char *file_fragment_shader_source = LoadShaderData("assets/fragShader.fs");
+	const char *file_fragment_shader_source = LoadShaderData("assets/fragShaderTex.fs");
 	glShaderSource(fragment_shader, 1, &file_fragment_shader_source, NULL);
 	glCompileShader(fragment_shader);
 
 	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
 		glGetShaderInfoLog(fragment_shader, 512, NULL, info);
-		printf("Error loading fragment shader %s\n", info);
+		printf("Error compiling fragment shader %s\n", info);
     }
 	else {
 		printf("Success loading fragment shader\n");
@@ -153,12 +161,19 @@ int main(int argc, char** argv)
 
 	glBindVertexArray(vertex_array_id);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_tex), cube_tex, GL_STATIC_DRAW);
 
+	// Positional data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	// Colour data
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glUseProgram(shader_program);
+	
+	/* glBindBuffer(GL_ARRAY_BUFFER, 0); */
+	/* glBindVertexArray(0); */
 
 	bool quit = false;
 	SDL_Event event;
@@ -211,7 +226,6 @@ int main(int argc, char** argv)
 		GLuint projection_loc = glGetUniformLocation(shader_program, "projection");
 		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection);
 
-		glUseProgram(shader_program);
 		glBindVertexArray(vertex_array_id);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		SDL_GL_SwapWindow(window);
