@@ -6,6 +6,7 @@
 #include "file_loading.h"
 #include "maths.h"
 #include "vertex_data.h"
+#include "timing.h"
 
 #define SDL_main main
 
@@ -21,19 +22,30 @@ GLuint vertex_buffer;
 
 // Get user input;  TODO: rescope globals
 static int player_dir = 0;
+// To test movement we will be manipulating the cubes' vertices
+// in various transforms
+// TODO: Remove when finished with
+static float y_size = 1.0f;
+static float x_size = 1.0f;
 void get_input()
 {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
 
 	player_dir = 0;
 
-	if (state[SDL_SCANCODE_A]) player_dir = -1;
-	if (state[SDL_SCANCODE_D]) player_dir = 1;
+	if (state[SDL_SCANCODE_A]) {
+		x_size -= 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_D]) {
+		x_size += 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_W]) {
+		y_size += 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_S]) {
+		y_size -= 0.55f * delta_time;
+	}
 }
-
-// Timings; TODO: Rescope globals
-static float delta_time = 0.0f;
-static int ticks = 0;
 
 void update_game()
 {
@@ -172,36 +184,33 @@ int main(int argc, char** argv)
 
 	glUseProgram(shader_program);
 	
-	/* glBindBuffer(GL_ARRAY_BUFFER, 0); */
-	/* glBindVertexArray(0); */
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	bool quit = false;
 	SDL_Event event;
 
 	// Temporary matrices
-	mat4f model[16] = {
+	mat4f model[MAT4] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
-	mat4f view[16] = {
+	mat4f view[MAT4] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
-	mat4f projection[16] = {
+	mat4f projection[MAT4] = {
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
-
-	// Try scaling
-	vec3 scalar = {0.1f, 0.5f, 1.0f};
 
 	// Main loop
 	while (!quit) {
@@ -217,6 +226,9 @@ int main(int argc, char** argv)
 		// Generate output
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+		/* translate(view, &scalar); */
+		scale(model, vec3(x_size, y_size, 1.0f), 1.0f);
 
 		// Temporary transforms for testing inputs and transforms
 		GLuint model_loc = glGetUniformLocation(shader_program, "model");
