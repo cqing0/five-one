@@ -27,6 +27,8 @@ static int player_dir = 0;
 // TODO: Remove when finished with
 static float y_size = 1.0f;
 static float x_size = 1.0f;
+static float x_pos = 0.0f;
+static float y_pos = 0.0f;
 void get_input()
 {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -44,6 +46,13 @@ void get_input()
 	}
 	if (state[SDL_SCANCODE_S]) {
 		y_size -= 0.55f * delta_time;
+	}
+
+	if (state[SDL_SCANCODE_LEFT]) {
+		x_pos -= 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_RIGHT]) {
+		x_pos += 0.55f * delta_time;
 	}
 }
 
@@ -187,6 +196,8 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	glEnable(GL_DEPTH_TEST);  
+
 	bool quit = false;
 	SDL_Event event;
 
@@ -225,9 +236,14 @@ int main(int argc, char** argv)
 
 		// Generate output
 		glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		/* translate(view, &scalar); */
+		// Test the transforms
+		vec3 scalar = {1.0f, 0.0f, 0.0f};
+		vec3 t_scalar = {x_pos, 0.0f, 0.0f};
+		/* rotate(model, (SDL_GetTicks() * delta_time) / 100.0f, &scalar); */
+		translate(view, &t_scalar);
+		/* perspective(projection, 1.0f, 2.0f, 1.0f, 2.0f, 0.1f, 100.0f); */
 		scale(model, vec3(x_size, y_size, 1.0f), 1.0f);
 
 		// Temporary transforms for testing inputs and transforms
