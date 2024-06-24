@@ -15,6 +15,7 @@ SDL_Window *window = NULL;
 SDL_GLContext context = NULL;
 static int width = 1280;
 static int height = 720;
+static bool quit = false;
 
 // OpenGL vert data
 GLuint vertex_array_id;
@@ -29,11 +30,20 @@ static float y_size = 1.0f;
 static float x_size = 1.0f;
 static float x_pos = 0.0f;
 static float y_pos = 0.0f;
+static float z_pos = 0.0f;
+static float x_dist = 0.0f;
+static float y_dist = 0.0f;
+static float rot = 0.0f;
+static float plpos = 1.0f;
 void get_input()
 {
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
 
 	player_dir = 0;
+
+	if (state[SDL_SCANCODE_ESCAPE]) {
+		quit = 1;
+	}
 
 	if (state[SDL_SCANCODE_A]) {
 		x_size -= 0.55f * delta_time;
@@ -53,6 +63,32 @@ void get_input()
 	}
 	if (state[SDL_SCANCODE_RIGHT]) {
 		x_pos += 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_UP]) {
+		y_pos += 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_DOWN]) {
+		y_pos -= 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_EQUALS]) {
+		z_pos += 0.55f * delta_time;
+	}
+	if (state[SDL_SCANCODE_MINUS]) {
+		z_pos -= 0.55f * delta_time;
+	}
+
+	if (state[SDL_SCANCODE_E]) {
+		rot += 4.0f * delta_time;
+	}
+	if (state[SDL_SCANCODE_Q]) {
+		rot -= 4.0f * delta_time;
+	}
+
+	if (state[SDL_SCANCODE_X]) {
+		plpos += 1.1f * delta_time;
+	}
+	if (state[SDL_SCANCODE_Z]) {
+		plpos -= 1.1f * delta_time;
 	}
 }
 
@@ -198,7 +234,6 @@ int main(int argc, char** argv)
 
 	glEnable(GL_DEPTH_TEST);  
 
-	bool quit = false;
 	SDL_Event event;
 
 	// Temporary matrices
@@ -223,6 +258,8 @@ int main(int argc, char** argv)
 		0.0f, 0.0f, 0.0f, 1.0f
 	};
 
+	float aspect_ratio = width / height;
+
 	// Main loop
 	while (!quit) {
 		while (SDL_PollEvent(&event)) {
@@ -239,12 +276,13 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Test the transforms
-		vec3 scalar = {1.0f, 0.0f, 0.0f};
-		vec3 t_scalar = {x_pos, 0.0f, 0.0f};
-		/* rotate(model, (SDL_GetTicks() * delta_time) / 100.0f, &scalar); */
+		vec3 r_scalar = {0.0f, 0.4f, 0.0f};
+		vec3 t_scalar = {x_pos, y_pos, z_pos};
+		rotate(model, rot, &r_scalar);
 		translate(view, &t_scalar);
-		/* perspective(projection, 1.0f, 2.0f, 1.0f, 2.0f, 0.1f, 100.0f); */
-		scale(model, vec3(x_size, y_size, 1.0f), 1.0f);
+		/* perspective(projection, -0.1f, 0.1f, -0.1f, 0.1f, 1.0f, 2.0f); */
+		n_perspective(projection, 20.0f, aspect_ratio, -2.0f, 2.0f);
+		/* scale(model, vec3(x_size, y_size, 1.0f), 1.0f); */
 
 		// Temporary transforms for testing inputs and transforms
 		GLuint model_loc = glGetUniformLocation(shader_program, "model");
@@ -252,7 +290,7 @@ int main(int argc, char** argv)
 		GLuint view_loc = glGetUniformLocation(shader_program, "view");
 		glUniformMatrix4fv(view_loc, 1, GL_FALSE, view);
 		GLuint projection_loc = glGetUniformLocation(shader_program, "projection");
-		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, projection);
+		glUniformMatrix4fv(projection_loc, 1, GL_FALSE, &projection[0]);
 
 		glBindVertexArray(vertex_array_id);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -260,7 +298,6 @@ int main(int argc, char** argv)
 	}
 
 	// Free necessary data on shutdown
-	window = NULL;
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return 0;

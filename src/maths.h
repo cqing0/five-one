@@ -34,4 +34,5 @@ void scale(mat4f *arr, vec3 scale_vector, float mult);
 void rotate(mat4f *arr, float rad_angle, vec3 *in);
 void translate(mat4f *arr, vec3 *in);
 void perspective(mat4f *arr, float left, float right, float bottom, float top, float n_plane, float f_plane);
+void n_perspective(mat4f *arr, float fov_y, float aspect, float nplane, float fplane);
 void orthographic(mat4f *arr, float left, float right, float bottom, float top, float n_plane, float f_plane);
